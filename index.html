@@ -116,6 +116,9 @@ img{display:block}
 .verse .poem{font-family:var(--cal);font-size:27px;line-height:2;letter-spacing:.16em;color:var(--ivory);margin-bottom:30px}
 .verse .poem b{color:var(--gold-bright);font-weight:400}
 .verse p.body{font-size:14.5px;line-height:2.15;letter-spacing:.06em;color:var(--ivory-dim);max-width:320px;margin:0 auto;text-wrap:pretty}
+.verse .guest{font-family:var(--cal);font-size:21px;letter-spacing:.12em;color:var(--gold-bright);margin:-14px 0 26px}
+.verse .guest b{font-weight:400;color:var(--ivory)}
+.verse .guest span{color:var(--ivory);margin-left:.12em}
 
 /* ============ COUNTDOWN ============ */
 .countdown{background:linear-gradient(180deg,var(--red-deep),#46080a);color:var(--ivory);
@@ -228,6 +231,7 @@ img{display:block}
   <section class="screen verse" data-screen-label="敬邀">
     <div class="ornament reveal"><span class="line"></span><span class="dot">❀</span><span class="line r"></span></div>
     <div class="label reveal d1">敬 邀</div>
+    <div class="guest reveal d1" id="guestLine" hidden>致 <b id="guestName"></b><span id="guestHonor"></span></div>
     <div class="poem reveal d2">两情相悦 喜结良缘<br>愿以<b>余生</b> 共赴山海</div>
     <p class="body reveal d3">谨于公元二〇二六年十月四日，我们携手步入婚姻的殿堂。<br>这一天，因为有您的见证而格外珍贵——诚挚地邀请您，共享我们的喜悦与幸福。</p>
   </section>
@@ -321,6 +325,38 @@ img{display:block}
     es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
   },{threshold:.18});
   document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+})();
+
+/* ===================== 宾客个性化称呼（从网址参数读取） =====================
+   姓名：?to= / ?name= / ?guest= / ?n=
+   性别：?gender= / ?g= / ?sex=（先生 / 女士，亦支持 男/女、m/f）
+   读不到姓名则保持隐藏，不影响整体排版。 */
+(function(){
+  function honorific(g){
+    g=(g||'').trim().toLowerCase();
+    if(/^(m|male|man|mr|sir|boy|1|男|男士|先生)$/.test(g)) return '先生';
+    if(/^(f|female|woman|ms|mrs|miss|lady|girl|2|女|女士|小姐)$/.test(g)) return '女士';
+    return '';
+  }
+  var name='',gender='';
+  try{
+    var q=new URLSearchParams(location.search);
+    var nameKeys=['to','name','guest','n'];
+    for(var i=0;i<nameKeys.length;i++){var x=q.get(nameKeys[i]);if(x){name=x;break;}}
+    var genKeys=['gender','g','sex','title','t'];
+    for(var j=0;j<genKeys.length;j++){var y=q.get(genKeys[j]);if(y){gender=y;break;}}
+  }catch(e){}
+  name=(name||'').trim().slice(0,24);
+  if(name){
+    var line=document.getElementById('guestLine');
+    var nm=document.getElementById('guestName');
+    var ho=document.getElementById('guestHonor');
+    if(line&&nm){
+      nm.textContent=name;                 // textContent 安全注入，防脚本注入
+      if(ho){var h=honorific(gender);ho.textContent=h?(' '+h):'';}
+      line.hidden=false;
+    }
+  }
 })();
 
 /* ===================== countdown ===================== */
