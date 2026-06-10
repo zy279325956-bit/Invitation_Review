@@ -165,13 +165,17 @@ img{display:block}
 .row .k{font-size:11.5px;letter-spacing:.32em;color:var(--gold-deep);padding-left:.32em;margin-bottom:10px}
 .row .v{font-size:18px;color:var(--ink);letter-spacing:.06em;line-height:1.5;font-weight:500}
 .row .v small{display:block;font-size:13px;color:var(--ink-soft);font-weight:400;margin-top:5px;letter-spacing:.04em}
-.nav-btns{display:flex;gap:10px;margin-top:26px}
-.nav-btns a,.nav-btns button{flex:1;font-family:var(--serif);font-size:13px;letter-spacing:.08em;
-  padding:13px 6px;border-radius:11px;border:1px solid var(--gold-deep);background:transparent;color:var(--red);
-  cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;transition:.25s}
+.nav-btns{display:flex;gap:8px;margin-top:26px}
+.nav-btns a,.nav-btns button{flex:1;min-width:0;font-family:var(--serif);font-size:13px;letter-spacing:.04em;
+  padding:12px 4px;border-radius:11px;border:1px solid var(--gold-deep);background:transparent;color:var(--red);
+  cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:.25s}
 .nav-btns a:active,.nav-btns button:active{background:var(--red);color:var(--ivory);border-color:var(--red)}
 .nav-btns .primary{background:var(--red);color:var(--ivory);border-color:var(--red)}
-.nav-btns svg{width:15px;height:15px}
+.nav-btns svg{width:15px;height:15px;flex-shrink:0}
+@media (max-width:360px){
+  .nav-btns a,.nav-btns button{font-size:12px;letter-spacing:0;gap:4px;padding:11px 3px}
+  .nav-btns svg{width:13px;height:13px}
+}
 .toast{position:fixed;left:50%;bottom:40px;transform:translate(-50%,20px);z-index:60;
   background:rgba(40,20,16,.92);color:var(--ivory);font-size:13px;letter-spacing:.06em;padding:11px 20px;
   border-radius:30px;opacity:0;pointer-events:none;transition:.4s}
@@ -289,9 +293,9 @@ img{display:block}
         <div class="v" style="font-size:15px;font-weight:400;line-height:1.7">安徽省广德市 · 老四川大酒店</div>
       </div>
       <div class="nav-btns">
-        <a class="primary" id="navGaode" href="https://uri.amap.com/search?keyword=老四川大酒店&city=广德" target="_blank" rel="noopener">
+        <a class="primary" id="navGaode" href="https://uri.amap.com/search?keyword=老四川大酒店（复兴北街店）&city=广德" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>高德导航</a>
-        <a id="navBaidu" href="https://map.baidu.com/search/老四川大酒店广德" target="_blank" rel="noopener">
+        <a id="navBaidu" href="https://api.map.baidu.com/geocoder?address=老四川大酒店（复兴北街店）&output=html&src=webapp.wedding" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>百度地图</a>
         <button id="copyAddr">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制</button>
@@ -390,15 +394,21 @@ img{display:block}
   },{passive:true});
 })();
 
-/* ===================== copy address ===================== */
+/* ===================== 地图导航 / 复制地址 ===================== */
 (function(){
-  const addr='安徽省广德市 老四川大酒店 三楼·天空之镜宴会厅';
+  // 页面展示地址保持不变；导航与复制统一传这个名称，便于地图精确定位
+  const place='老四川大酒店（复兴北街店）';
+  const gaode=document.getElementById('navGaode');
+  const baidu=document.getElementById('navBaidu');
+  if(gaode) gaode.href='https://uri.amap.com/search?keyword='+encodeURIComponent(place)+'&city=广德';
+  if(baidu) baidu.href='https://api.map.baidu.com/geocoder?address='+encodeURIComponent(place)+'&output=html&src=webapp.wedding';
   const toast=document.getElementById('toast');
-  document.getElementById('copyAddr').addEventListener('click',async()=>{
-    try{await navigator.clipboard.writeText(addr);}catch(e){
-      const t=document.createElement('textarea');t.value=addr;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();
+  const cp=document.getElementById('copyAddr');
+  if(cp) cp.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(place);}catch(e){
+      const t=document.createElement('textarea');t.value=place;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();
     }
-    toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800);
+    if(toast){toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800);}
   });
 })();
 
