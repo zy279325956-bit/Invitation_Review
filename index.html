@@ -461,7 +461,7 @@ petalField('cdPetals','rgba(216,185,116,.55)');
 petalField('petals2','rgba(255,245,225,.7)');
 
 /* ===================== background music ====================================
-   优先播放 musics/ 里的真实歌曲（列表循环，由 _build.py 生成 playlist）；
+   优先播放 musics/ 里的真实歌曲（洗牌轮播，由 _build.py 生成 playlist）；
    没有歌单 / 歌单为空时，自动回退到下面纯代码合成的电影感弦乐（离线可用）。
    右上角 ♪ 按钮开关；首次轻触页面自动开启。 */
 (function(){
@@ -469,23 +469,66 @@ petalField('petals2','rgba(255,245,225,.7)');
   function setPlaying(on){btn.classList.toggle('playing',on);}
   function dismissHint(){if(hint&&hint.parentNode){hint.style.opacity='0';setTimeout(()=>{if(hint&&hint.parentNode)hint.remove();},600);}}
 
-  /* ---------- 真实歌单：<audio> 顺序列表循环 ---------- */
+  /* ---------- 真实歌单：<audio> 洗牌轮播 ---------- */
   function makeAudio(list){
     const el=new Audio();el.preload='auto';el.volume=0;
-    const VOL=.9;let idx=0,playing=false,raf=0;
-    const load=i=>{idx=((i%list.length)+list.length)%list.length;el.src=list[idx].src;};
+    const VOL=.9,failed=new Set(),seen=new Set();
+    const raw=list.filter(x=>{if(!x||!x.src||seen.has(x.src))return false;seen.add(x.src);return true;});
+    let bag=[],current=null,lastPlayed=null,playing=false,wantPlay=false,raf=0;
+    const usable=t=>t&&t.src&&!failed.has(t.src);
+    function shuffle(a){
+      a=a.slice();
+      for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}
+      return a;
+    }
+    function refill(){
+      bag=shuffle(raw.filter(usable));
+      if(bag.length>1&&lastPlayed&&bag[0].src===lastPlayed.src){
+        const i=bag.findIndex((t,n)=>n>0&&t.src!==lastPlayed.src);
+        if(i>0)[bag[0],bag[i]]=[bag[i],bag[0]];
+      }
+    }
+    function loadNext(){
+      while(true){
+        if(!bag.length)refill();
+        if(!bag.length)return false;
+        const t=bag.shift();
+        if(usable(t)){current=t;el.src=t.src;return true;}
+      }
+    }
     function fade(to,ms){
       cancelAnimationFrame(raf);const from=el.volume,t0=performance.now();
       (function s(){const k=ms?Math.min(1,(performance.now()-t0)/ms):1;
         el.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k<1)raf=requestAnimationFrame(s);})();
     }
-    el.addEventListener('ended',()=>{load(idx+1);el.volume=VOL;el.play().catch(()=>{});});
-    el.addEventListener('error',()=>{if(list.length>1){load(idx+1);if(playing){el.play().catch(()=>{});el.volume=VOL;}}});
-    load(0);
+    function stopUnavailable(){
+      wantPlay=false;playing=false;current=null;cancelAnimationFrame(raf);el.pause();setPlaying(false);
+    }
+    function playCurrent(fadeMs){
+      if(!current&&!loadNext()){stopUnavailable();return;}
+      const p=el.play();
+      if(p&&p.then){
+        p.then(()=>{if(fadeMs)fade(VOL,fadeMs);else el.volume=VOL;})
+          .catch(err=>{playing=false;if(err&&err.name==='NotAllowedError')wantPlay=false;setPlaying(false);});
+      }else if(fadeMs)fade(VOL,fadeMs);else el.volume=VOL;
+    }
+    el.addEventListener('play',()=>{playing=true;setPlaying(true);});
+    el.addEventListener('playing',()=>{playing=true;lastPlayed=current;setPlaying(true);});
+    el.addEventListener('pause',()=>{if(!wantPlay){playing=false;setPlaying(false);}});
+    el.addEventListener('ended',()=>{
+      playing=false;current=null;
+      if(wantPlay){if(loadNext())playCurrent(0);else stopUnavailable();}else setPlaying(false);
+    });
+    el.addEventListener('error',()=>{
+      if(!current||!current.src)return;
+      failed.add(current.src);bag=bag.filter(usable);current=null;playing=false;
+      if(wantPlay){if(loadNext())playCurrent(0);else stopUnavailable();}
+      else if(!loadNext())stopUnavailable();
+    });
     return{
-      play(){el.play().catch(()=>{});fade(VOL,1400);playing=true;setPlaying(true);},
-      pause(){fade(0,800);setTimeout(()=>{if(!playing)el.pause();},820);playing=false;setPlaying(false);},
-      get playing(){return playing;}
+      play(){wantPlay=true;playCurrent(1400);},
+      pause(){wantPlay=false;fade(0,800);setTimeout(()=>{if(!wantPlay)el.pause();},820);},
+      get playing(){return wantPlay;}
     };
   }
 
@@ -561,7 +604,7 @@ petalField('petals2','rgba(255,245,225,.7)');
 
   const ready=loadPlaylist().then(list=>(list&&list.length)?makeAudio(list):makeProcedural());
   btn.addEventListener('click',()=>{ready.then(e=>e.playing?e.pause():e.play());dismissHint();});
-  function firstTouch(){ready.then(e=>{if(!e.playing)e.play();});dismissHint();window.removeEventListener('pointerdown',firstTouch);}
+  function firstTouch(e){if(e&&btn.contains(e.target))return;ready.then(e=>{if(!e.playing)e.play();});dismissHint();window.removeEventListener('pointerdown',firstTouch);}
   window.addEventListener('pointerdown',firstTouch,{once:true});
   setTimeout(dismissHint,6000);
 })();
