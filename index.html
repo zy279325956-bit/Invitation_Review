@@ -132,6 +132,7 @@ img{display:block}
   font-variant-numeric:tabular-nums}
 .cd-unit{font-size:12px;letter-spacing:.18em;color:var(--ivory-dim);margin-top:10px}
 .cd-date{margin-top:34px;font-family:var(--lat);font-size:20px;letter-spacing:.26em;color:var(--ivory);padding-left:.26em;position:relative}
+.cd-time{font-size:17px;letter-spacing:.24em;color:var(--gold-bright);margin-top:10px;padding-left:.24em;position:relative}
 .cd-week{font-size:12.5px;letter-spacing:.3em;color:var(--gold);margin-top:8px;padding-left:.3em;position:relative}
 
 /* ============ GALLERY ============ */
@@ -251,6 +252,7 @@ img{display:block}
       <div class="cd-cell"><div class="cd-num" id="cdS">00</div><div class="cd-unit">秒</div></div>
     </div>
     <div class="cd-date reveal d2">2026 · 10 · 04</div>
+    <div class="cd-time reveal d2">中午 11:58</div>
     <div class="cd-week reveal d2">星期日 · 农历八月廿四</div>
   </section>
 
@@ -283,6 +285,10 @@ img{display:block}
       <div class="row">
         <div class="k">WEDDING DATE</div>
         <div class="v">2026年10月4日<small>星期日 · 农历八月廿四</small></div>
+      </div>
+      <div class="row">
+        <div class="k">WEDDING TIME</div>
+        <div class="v">中午 11:58</div>
       </div>
       <div class="row">
         <div class="k">VENUE</div>
@@ -365,7 +371,7 @@ img{display:block}
 
 /* ===================== countdown ===================== */
 (function(){
-  const target=new Date('2026-10-04T11:18:00+08:00').getTime();
+  const target=new Date('2026-10-04T11:58:00+08:00').getTime();
   const D=document.getElementById('cdD'),H=document.getElementById('cdH'),M=document.getElementById('cdM'),S=document.getElementById('cdS');
   const p=n=>String(n).padStart(2,'0');
   function tick(){
